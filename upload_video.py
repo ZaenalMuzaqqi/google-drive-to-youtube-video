@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import http.client
 import httplib2
 import os
 import random
@@ -23,10 +22,7 @@ httplib2.RETRIES = 1
 MAX_RETRIES = 10
 
 # Always retry when these exceptions are raised.
-RETRIABLE_EXCEPTIONS = (httplib2.HttpLib2Error, IOError, http.client.NotConnected,
-  http.client.IncompleteRead, http.client.ImproperConnectionState,
-  http.client.CannotSendRequest, http.client.CannotSendHeader,
-  http.client.ResponseNotReady, http.client.BadStatusLine)
+RETRIABLE_EXCEPTIONS = (httplib2.HttpLib2Error, IOError)
 
 # Always retry when an apiclient.errors.HttpError with one of these status
 # codes is raised.
@@ -70,9 +66,6 @@ https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 
 VALID_PRIVACY_STATUSES = ("public", "private", "unlisted")
 
-# args = argparser.parse_args()
-# args.noauth_local_webserver = True
-
 
 def get_authenticated_service(args):
   flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
@@ -82,11 +75,8 @@ def get_authenticated_service(args):
   storage = Storage("%s-oauth2.json" % sys.argv[0])
   credentials = storage.get()
 
-
   if credentials is None or credentials.invalid:
-    flags = argparser.parse_args('--auth_host_name localhost --logging_level INFO --noauth_local_webserver'.split())
-    credentials = run_flow(flow, storage, flags)
-#    credentials = run_flow(flow, storage, args)
+    credentials = run_flow(flow, storage, args)
 
   return build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
     http=credentials.authorize(httplib2.Http()))
@@ -110,7 +100,7 @@ def initialize_upload(youtube, options):
 
   # Call the API's videos.insert method to create and upload the video.
   insert_request = youtube.videos().insert(
-    part=",".join(list(body.keys())),
+    part=",".join(body.keys()),
     body=body,
     # The chunksize parameter specifies the size of each chunk of data, in
     # bytes, that will be uploaded at a time. Set a higher value for
@@ -136,11 +126,11 @@ def resumable_upload(insert_request):
   retry = 0
   while response is None:
     try:
-      print("Uploading file...")
+      print ("Uploading file...")
       status, response = insert_request.next_chunk()
       if response is not None:
         if 'id' in response:
-          print("Video id '%s' was successfully uploaded." % response['id'])
+          print ("Video id '%s' was successfully uploaded." % response['id'])
         else:
           exit("The upload failed with an unexpected response: %s" % response)
     except HttpError as e:
@@ -153,14 +143,14 @@ def resumable_upload(insert_request):
       error = "A retriable error occurred: %s" % e
 
     if error is not None:
-      print(error)
+      print (error)
       retry += 1
       if retry > MAX_RETRIES:
         exit("No longer attempting to retry.")
 
       max_sleep = 2 ** retry
       sleep_seconds = random.random() * max_sleep
-      print("Sleeping %f seconds and then retrying..." % sleep_seconds)
+      print ("Sleeping %f seconds and then retrying..." % sleep_seconds)
       time.sleep(sleep_seconds)
 
 if __name__ == '__main__':
@@ -184,4 +174,4 @@ if __name__ == '__main__':
   try:
     initialize_upload(youtube, args)
   except HttpError as e:
-    print("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
+    print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
