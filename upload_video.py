@@ -70,7 +70,8 @@ https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 
 VALID_PRIVACY_STATUSES = ("public", "private", "unlisted")
 
-
+args = argparser.parse_args()
+args.noauth_local_webserver = True
 
 
 def get_authenticated_service(args):
@@ -80,8 +81,7 @@ def get_authenticated_service(args):
 
   storage = Storage("%s-oauth2.json" % sys.argv[0])
   credentials = storage.get()
-  args = argparser.parse_args()
-  args.noauth_local_webserver = True
+
 
   if credentials is None or credentials.invalid:
     credentials = run_flow(flow, storage, args)
