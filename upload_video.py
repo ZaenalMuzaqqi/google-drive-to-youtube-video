@@ -70,8 +70,8 @@ https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 
 VALID_PRIVACY_STATUSES = ("public", "private", "unlisted")
 
-args = argparser.parse_args()
-args.noauth_local_webserver = True
+# args = argparser.parse_args()
+# args.noauth_local_webserver = True
 
 
 def get_authenticated_service(args):
@@ -84,7 +84,9 @@ def get_authenticated_service(args):
 
 
   if credentials is None or credentials.invalid:
-    credentials = run_flow(flow, storage, args)
+    flags = argparser.parse_args('--auth_host_name localhost --logging_level INFO --noauth_local_webserver'.split())
+    credentials = run_flow(flow, storage, flags)
+#    credentials = run_flow(flow, storage, args)
 
   return build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
     http=credentials.authorize(httplib2.Http()))
